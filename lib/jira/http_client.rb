@@ -13,9 +13,9 @@ module JIRA
     attr_reader :options
     attr_accessor :cookies
 
-    def initialize(options)
+    def initialize(options, cookies = {})
       @options = DEFAULT_OPTIONS.merge(options)
-      @cookies = {}
+      @cookies = cookies
     end
 
     def make_cookie_auth_request
