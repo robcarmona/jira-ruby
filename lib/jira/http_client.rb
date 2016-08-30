@@ -11,6 +11,7 @@ module JIRA
     }
 
     attr_reader :options
+    attr_accessor :cookies
 
     def initialize(options)
       @options = DEFAULT_OPTIONS.merge(options)
@@ -18,11 +19,17 @@ module JIRA
     end
 
     def make_cookie_auth_request
-      body = { :username => @options[:username], :password => @options[:password] }.to_json
-      make_request(:post, '/rest/auth/1/session', body, {'Content-Type' => 'application/json'})
+      if @options[:username].present && @options[:password].present
+        body = { username: @options[:username],
+                 password: @options[:password] }.to_json
+      end
+      make_request(:post,
+                   '/rest/auth/1/session',
+                   body || nil,
+                   'Content-Type' => 'application/json')
     end
 
-    def make_request(http_method, path, body='', headers={})
+    def make_request(http_method, path, body = '', headers = {})
       request = Net::HTTP.const_get(http_method.to_s.capitalize).new(path, headers)
       request.body = body unless body.nil?
       add_cookies(request) if options[:use_cookies]
