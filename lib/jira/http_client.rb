@@ -19,7 +19,7 @@ module JIRA
     end
 
     def make_cookie_auth_request
-      if @options[:username].present? && @options[:password].present?
+      unless got_cookies?
         body = { username: @options[:username],
                  password: @options[:password] }.to_json
       end
@@ -30,13 +30,13 @@ module JIRA
     end
 
     def make_request(http_method, path, body = '', headers = {})
-      headers['cookie'] = "JSESSIONID=#{@cookies['JSESSIONID'].first}" if @cookies.present?
+      headers['cookie'] = "JSESSIONID=#{@cookies['JSESSIONID'].first}" if got_cookies?
       request = Net::HTTP.const_get(http_method.to_s.capitalize).new(path, headers)
       request.body = body unless body.nil?
-      add_cookies(request) if options[:use_cookies]
-      request.basic_auth(@options[:username], @options[:password]) unless @cookies.present?
+      add_cookies(request) if options[:use_cookies] && got_cookies?
+      request.basic_auth(@options[:username], @options[:password]) unless got_cookies?
       response = basic_auth_http_conn.request(request)
-      store_cookies(response) if options[:use_cookies] && @cookies.empty?
+      store_cookies(response) if options[:use_cookies] && !got_cookies?
       response
     end
 
@@ -62,6 +62,10 @@ module JIRA
     end
 
     private
+
+    def got_cookies?
+      @cookies['atlassian.xsrf.token'].present?
+    end
 
     def store_cookies(response)
       cookies = response.get_fields('set-cookie')
