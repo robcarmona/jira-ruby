@@ -4,22 +4,20 @@ require 'cgi/cookie'
 
 module JIRA
   class HttpClient < RequestClient
-
     DEFAULT_OPTIONS = {
-      :username           => '',
-      :password           => ''
+      username: '',
+      password: ''
     }
-
     attr_reader :options
     attr_accessor :cookies
 
     def initialize(options)
       @options = DEFAULT_OPTIONS.merge(options)
-      @cookies = options[:cookies] || {}
+      @cookies = {}
     end
 
     def make_cookie_auth_request
-      unless got_cookies?
+      unless cookies?
         body = { username: @options[:username],
                  password: @options[:password] }.to_json
       end
@@ -30,13 +28,12 @@ module JIRA
     end
 
     def make_request(http_method, path, body = '', headers = {})
-      #headers['cookie'] = "JSESSIONID=#{@cookies['JSESSIONID'].first}" if got_cookies?
       request = Net::HTTP.const_get(http_method.to_s.capitalize).new(path, headers)
       request.body = body unless body.nil?
       add_cookies(request) if options[:use_cookies]
-      request.basic_auth(@options[:username], @options[:password]) #unless got_cookies?
+      request.basic_auth(@options[:username], @options[:password])
       response = basic_auth_http_conn.request(request)
-      store_cookies(response) if options[:use_cookies] #&& !got_cookies?
+      store_cookies(response) if options[:use_cookies]
       response
     end
 
@@ -46,9 +43,9 @@ module JIRA
 
     def http_conn(uri)
       if @options[:proxy_address]
-          http_class = Net::HTTP::Proxy(@options[:proxy_address], @options[:proxy_port] ? @options[:proxy_port] : 80)
+        http_class = Net::HTTP::Proxy(@options[:proxy_address], @options[:proxy_port] ? @options[:proxy_port] : 80)
       else
-          http_class = Net::HTTP
+        http_class = Net::HTTP
       end
       http_conn = http_class.new(uri.host, uri.port)
       http_conn.use_ssl = @options[:use_ssl]
@@ -58,16 +55,14 @@ module JIRA
     end
 
     def uri
-      uri = URI.parse(@options[:site])
+      URI.parse(@options[:site])
     end
 
-    def got_cookies?
+    def cookies?
       @cookies['atlassian.xsrf.token'].present?
     end
 
     private
-
-
 
     def store_cookies(response)
       cookies = response.get_fields('set-cookie')
