@@ -19,7 +19,7 @@ module JIRA
     end
 
     def make_cookie_auth_request
-      if @options[:username].present && @options[:password].present
+      if @options[:username].present? && @options[:password].present?
         body = { username: @options[:username],
                  password: @options[:password] }.to_json
       end
