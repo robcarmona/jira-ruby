@@ -33,7 +33,7 @@ module JIRA
       headers['cookie'] = "JSESSIONID=#{@cookies['JSESSIONID'].first}" if got_cookies?
       request = Net::HTTP.const_get(http_method.to_s.capitalize).new(path, headers)
       request.body = body unless body.nil?
-      add_cookies(request) if options[:use_cookies] && got_cookies?
+      add_cookies(request) if options[:use_cookies]
       request.basic_auth(@options[:username], @options[:password]) unless got_cookies?
       response = basic_auth_http_conn.request(request)
       store_cookies(response) if options[:use_cookies] && !got_cookies?
@@ -61,11 +61,13 @@ module JIRA
       uri = URI.parse(@options[:site])
     end
 
-    private
-
     def got_cookies?
       @cookies['atlassian.xsrf.token'].present?
     end
+
+    private
+
+
 
     def store_cookies(response)
       cookies = response.get_fields('set-cookie')
