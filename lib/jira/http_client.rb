@@ -30,7 +30,7 @@ module JIRA
     end
 
     def make_request(http_method, path, body = '', headers = {})
-      headers['cookie'] = "JSESSIONID=#{cookies['JSESSIONID'].first}" if @cookies.present?
+      headers['cookie'] = "JSESSIONID=#{@cookies['JSESSIONID'].first}" if @cookies.present?
       request = Net::HTTP.const_get(http_method.to_s.capitalize).new(path, headers)
       request.body = body unless body.nil?
       add_cookies(request) if options[:use_cookies]
